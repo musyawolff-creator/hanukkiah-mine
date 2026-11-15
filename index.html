@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>משחק החנוכיה</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Secular+One&family=Varela+Round&display=swap">
+<style>
+:root{--bg:#1d1552;--bg2:#4a2587;--text:#fff1c9;--card:rgba(255,255,255,.1);--accent:#ffd36b;--gold:#f6c453;--gold2:#b9851d;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0a33;--bg2:#2e1766}}
+:root[data-theme="dark"]{--bg:#0d0a33;--bg2:#2e1766}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;background:linear-gradient(var(--bg2),var(--bg) 85%);color:var(--text);font-family:"Varela Round","Segoe UI",Arial,sans-serif;text-align:center;overflow-x:hidden;-webkit-user-select:none;user-select:none}
+#sky{position:fixed;inset:0;pointer-events:none;z-index:0}
+.star{position:absolute;border-radius:50%;background:#fff;box-shadow:0 0 6px #fff;animation:tw 9s ease-in-out infinite alternate}
+#app{position:relative;z-index:1;padding-bottom:30px}
+h1{font:400 clamp(28px,7vw,42px) "Secular One","Varela Round",sans-serif;margin:14px 0 4px;color:var(--accent);text-shadow:0 0 18px rgba(255,200,80,.75)}
+#days{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin:8px 0}
+#days button{width:38px;height:38px;border-radius:50%;border:2px solid var(--accent);background:rgba(255,255,255,.08);color:var(--text);font:400 19px "Secular One",sans-serif;cursor:pointer}
+#days button.on{background:radial-gradient(circle at 35% 30%,#fff2b0,var(--gold) 60%,var(--gold2));border-color:#fff2b0;color:#3a2700;box-shadow:0 0 14px rgba(255,210,100,.8)}
+#big{font-size:clamp(20px,5vw,28px);margin:8px 0;display:flex;align-items:center;justify-content:center;gap:10px}
+#num{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;font:400 40px "Secular One",sans-serif;color:#3a2700;background:radial-gradient(circle at 35% 30%,#fff7c8,var(--gold) 55%,var(--gold2));box-shadow:0 0 24px rgba(255,210,100,.8),inset 0 -4px 6px rgba(120,70,0,.35)}
+#msgrow{display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 14px}
+#msg{flex:1;min-height:3.4em;font-size:clamp(17px,4.4vw,22px);display:flex;align-items:center;justify-content:center;line-height:1.4}
+#badge,#bn{display:none;align-items:center;justify-content:center;border-radius:50%;font:400 42px "Secular One",sans-serif;color:#3a2700;background:radial-gradient(circle at 35% 30%,#fff7c8,var(--gold) 55%,var(--gold2));box-shadow:0 0 24px rgba(255,210,100,.8),inset 0 -4px 6px rgba(120,70,0,.35)}
+#badge{width:68px;height:68px;flex:none}
+body.rnd #badge{display:flex}
+#bn{display:flex;position:fixed;left:0;top:0;width:84px;height:84px;font-size:52px;opacity:0;pointer-events:none;z-index:55;will-change:transform}
+body.rnd #big,body.rnd #days{display:none}
+#restart,#shuffle{margin-top:22px;margin-inline:5px;background:none;border:1px solid rgba(255,211,107,.5);color:var(--text);border-radius:14px;padding:6px 14px;font:inherit;font-size:14px;cursor:pointer;opacity:.7}
+#arrow{width:min(240px,60vw);height:30px;margin:2px auto}
+#arrow.flip{transform:scaleX(-1)}
+#arrow path{stroke:var(--accent);stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(255,200,80,.8))}
+#stage{position:relative;max-width:600px;margin:30px auto 0;--glow:0}
+#aura{position:absolute;left:-30px;right:-30px;top:-50px;height:290px;background:radial-gradient(ellipse at 50% 55%,rgba(255,190,70,.6),rgba(255,140,40,.2) 45%,transparent 70%);opacity:var(--glow);transition:opacity 1s;pointer-events:none}
+#menorah{position:relative;display:flex;justify-content:center;align-items:flex-end;gap:1.4vw;padding:0 8px}
+.slot{flex:1;max-width:58px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.slot.sham{margin-bottom:42px;touch-action:none}
+.slot.sham.ready{cursor:grab}
+.slot.sham.ready .holder{border-color:var(--accent);animation:glow 2.8s ease-in-out infinite alternate}
+.slot.dragging .holder{opacity:.3}
+.ghost .flame{display:block;animation:flick 1.8s ease-in-out infinite alternate}
+.holder{width:62%;height:92px;position:relative;border:2px dashed transparent;border-radius:8px 8px 0 0;transition:background .15s}
+.slot:not(.sham) .holder{border-color:rgba(255,211,107,.4)}
+.slot.full .holder{border-color:transparent}
+.slot.over .holder{background:rgba(255,211,107,.25);border-color:var(--accent)}
+.slot.hint .holder{border-color:var(--accent);animation:glow 2.8s ease-in-out infinite alternate}
+.cup{width:112%;height:15px;background:linear-gradient(#ffe69a,var(--gold) 40%,var(--gold2));border-radius:4px 4px 12px 12px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.sham .cup{position:relative}
+.sham .cup::after{content:"";position:absolute;top:100%;left:50%;width:8px;height:44px;background:linear-gradient(90deg,var(--gold2),#ffe69a,var(--gold2));transform:translateX(-50%)}
+.candle{position:absolute;inset:auto 0 0 0;height:100%;border-radius:8px 8px 0 0;background-image:linear-gradient(90deg,rgba(255,255,255,.35),rgba(255,255,255,0) 35%,rgba(0,0,0,.18));animation:drop .3s ease-out}
+.candle::before{content:"";position:absolute;top:-7px;left:50%;width:3px;height:9px;background:#3b2a1a;border-radius:2px;transform:translateX(-50%)}
+.flame{position:absolute;top:-34px;left:50%;width:15px;height:27px;margin-left:-7px;border-radius:50% 50% 50% 50%/68% 68% 32% 32%;background:radial-gradient(ellipse at 50% 78%,#fffbd0 0,#ffd23f 38%,#ff8a00 100%);box-shadow:0 0 14px 6px rgba(255,170,0,.6),0 0 38px 16px rgba(255,140,0,.28);transform-origin:50% 100%;display:none}
+.candle.lit .flame{display:block;animation:flick 1.8s ease-in-out infinite alternate}
+#base{position:relative;height:17px;margin:0 8px;background:linear-gradient(#ffe69a,var(--gold) 45%,var(--gold2));border-radius:9px;box-shadow:0 3px 8px rgba(0,0,0,.35)}
+#stand{position:relative;width:30px;height:46px;margin:0 auto;background:linear-gradient(90deg,var(--gold2),#ffe69a,var(--gold2))}
+#stand::after{content:"";position:absolute;bottom:-12px;left:50%;width:120px;height:14px;background:linear-gradient(#ffe69a,var(--gold2));border-radius:10px;transform:translateX(-50%)}
+#boxlabel{margin:34px 0 8px;font:400 22px "Secular One",sans-serif;color:var(--accent)}
+#tray{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:16px 14px 12px;margin:0 auto;max-width:460px;background:var(--card);border:2px solid rgba(255,211,107,.5);border-radius:22px;min-height:100px;box-shadow:0 0 22px rgba(160,110,255,.35)}
+.tc{width:34px;height:88px;border:0;border-radius:8px 8px 0 0;cursor:grab;touch-action:none;background-image:linear-gradient(90deg,rgba(255,255,255,.35),rgba(255,255,255,0) 35%,rgba(0,0,0,.18));transition:transform .15s}
+.tc:hover{transform:translateY(-5px)}
+.tc.dragging{opacity:.25}
+.ghost{position:fixed;width:34px;height:88px;border-radius:8px 8px 0 0;pointer-events:none;z-index:40;transform:translate(-50%,-50%) rotate(-7deg);box-shadow:0 14px 20px rgba(0,0,0,.45),0 0 16px rgba(255,220,130,.6);background-image:linear-gradient(90deg,rgba(255,255,255,.35),rgba(255,255,255,0) 35%,rgba(0,0,0,.18))}
+.sp{position:fixed;color:var(--accent);font-size:18px;pointer-events:none;z-index:35;animation:sp .9s ease-out forwards}
+.shake{animation:shake .4s}
+#win{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,3,30,.6);z-index:50;padding:20px}
+#win.show{display:flex}
+#win .card{background:linear-gradient(var(--bg2),var(--bg));border:3px solid var(--accent);border-radius:28px;padding:26px 30px;max-width:340px;box-shadow:0 0 40px rgba(255,200,80,.6)}
+#win h2{margin:0 0 8px;font:400 38px "Secular One",sans-serif;color:var(--accent)}
+#win p{font-size:20px;margin:0 0 18px}
+#next{font:400 24px "Secular One",sans-serif;background:radial-gradient(circle at 35% 25%,#fff2b0,var(--gold) 60%,var(--gold2));color:#3a2700;border:0;border-radius:18px;padding:12px 28px;cursor:pointer;box-shadow:0 0 18px rgba(255,210,100,.7)}
+.conf{position:fixed;top:-40px;font-size:28px;z-index:60;pointer-events:none;animation:fall 2.6s linear forwards}
+@keyframes tw{from{opacity:.5}to{opacity:.95}}
+@keyframes flick{from{transform:scale(1,1) skewX(-1.5deg)}to{transform:scale(1.04,1.03) skewX(1.5deg)}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes glow{from{box-shadow:0 0 0 rgba(246,196,83,0)}to{box-shadow:0 0 9px 2px rgba(246,196,83,.45)}}
+@keyframes drop{from{transform:translateY(-22px);opacity:0}to{transform:none;opacity:1}}
+@keyframes sp{to{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<div id="app">
+<h1>✨ משחק החנוכיה ✨</h1>
+<div id="days" aria-label="בחירת יום"></div>
+<div id="big">היום ה־<span id="num">1</span></div>
+<div id="msgrow"><div id="badge"></div><div id="msg"></div></div>
+<svg id="arrow" viewBox="0 0 240 30"><path d="M228 15H14M32 4L13 15L32 26"/></svg>
+<div id="stage"><div id="aura"></div><div id="menorah"></div><div id="base"></div><div id="stand"></div></div>
+<div id="boxlabel">קופסת הנרות</div>
+<div id="tray"></div>
+<button id="restart">מתחילים מהיום הראשון</button>
+<button id="shuffle">משחקים בלי סדר</button>
+</div>
+<div id="bn"></div>
+<div id="win"><div class="card"><h2>כל הכבוד! 🎉</h2><p id="wintext"></p><button id="next">היום הבא</button></div></div>
+<script>
+const COLORS=['#e53935','#1e88e5','#fdd835','#43a047','#ec407a','#8e24aa','#fb8c00','#26c6da'];
+let day=1,placed=0,phase='place',litN=0,wrong=0,slots=[],sham=null,ac,mode='seq',introTk=0;
+const $=id=>document.getElementById(id);
+function beep(f){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type='triangle';o.frequency.value=f;g.gain.value=.09;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.3);o.stop(ac.currentTime+.3)}catch(e){}}
+function say(t){$('msg').textContent=t}
+function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')}
+function sparkle(el){const r=el.getBoundingClientRect();for(let i=0;i<8;i++){const s=document.createElement('div');s.className='sp';s.textContent='✦';s.style.left=r.left+r.width/2+'px';s.style.top=r.top+30+'px';s.style.setProperty('--dx',(Math.random()*90-45)+'px');s.style.setProperty('--dy',(-30-Math.random()*70)+'px');document.body.appendChild(s);setTimeout(()=>s.remove(),950)}}
+function glow(){const n=(phase==='light'||phase==='done'?1:0)+litN;$('stage').style.setProperty('--glow',Math.min(1,n/(day+1)))}
+function candle(holder,color){const c=document.createElement('div');c.className='candle';c.style.backgroundColor=color;const f=document.createElement('div');f.className='flame';c.appendChild(f);holder.appendChild(c);return c}
+function build(){
+  const m=$('menorah');m.innerHTML='';slots=[];
+  for(let i=0;i<9;i++){
+    const isS=i===4,k=i<4?i:i-1;
+    const s=document.createElement('div');s.className='slot'+(isS?' sham':'');
+    s.innerHTML='<div class="holder"></div><div class="cup"></div>';
+    s.onclick=()=>isS?tapSham():tapSlot(k);
+    if(isS)s.onpointerdown=startShamDrag;
+    m.appendChild(s);
+    if(isS){sham=s;candle(s.firstChild,'#f6efd8')}else slots[k]=s;
+  }
+  const t=$('tray');t.innerHTML='';
+  COLORS.forEach((c,i)=>{const b=document.createElement('button');b.className='tc';b.style.backgroundColor=c;b.setAttribute('aria-label','נר');b.onpointerdown=e=>startDrag(e,i,b);t.appendChild(b)});
+}
+function ui(){
+  $('num').textContent=day;
+  document.querySelectorAll('#days button').forEach((b,i)=>b.classList.toggle('on',i+1===day));
+  const a=$('arrow');
+  if(phase==='intro'){say('איזה יום היום? 👀')}
+  else if(phase==='place'){a.classList.remove('flip');say(mode==='rnd'?'גררי נרות לפי המספר שבצד, מימין לשמאל. מתחילים מהצד הימני.':'גררי '+day+(day===1?' נר':' נרות')+' מהקופסה אל החנוכיה, מימין לשמאל. מתחילים מהצד הימני.')}
+  else if(phase==='shamash'){a.classList.add('flip');say('הדליקי את השמש בגפרור. זה הנר הגבוה שבאמצע 🔥')}
+  else if(phase==='light'){a.classList.add('flip');say('עכשיו גוררים את השמש מעל הנרות, משמאל לימין. כל נר שהשמש עוברת עליו נדלק. מתחילים מהנר הכי שמאלי, בלי לעזוב.')}
+  glow();
+}
+function newRound(d,r){
+  mode=r?'rnd':'seq';introTk++;document.body.classList.toggle('rnd',!!r);day=d;placed=0;phase='place';litN=0;wrong=0;
+  $('win').classList.remove('show');build();if(r)intro(d);else ui();
+}
+function slotAt(x,y){const el=document.elementFromPoint(x,y);const s=el&&el.closest('.slot');return s?slots.indexOf(s):-1}
+function startDrag(e,i,btn){
+  if(phase!=='place')return;
+  e.preventDefault();
+  const g=document.createElement('div');g.className='ghost';g.style.backgroundColor=COLORS[i];
+  document.body.appendChild(g);btn.classList.add('dragging');beep(440);
+  const mv=(x,y)=>{y-=50;g.style.left=x+'px';g.style.top=y+'px';const k=slotAt(x,y);slots.forEach((q,j)=>q.classList.toggle('over',j===k))};
+  mv(e.clientX,e.clientY);
+  const move=ev=>mv(ev.clientX,ev.clientY);
+  const up=ev=>{
+    removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+    g.remove();btn.classList.remove('dragging');slots.forEach(q=>q.classList.remove('over'));
+    const k=slotAt(ev.clientX,ev.clientY-50);
+    if(k>=0)drop(btn,i,k);
+  };
+  addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
+function drop(btn,i,k){
+  if(k!==placed){
+    shake(slots[k]);wrong++;beep(180);
+    say(k<placed?'כאן כבר יש נר! הנר הבא הולך משמאל לנר הקודם.':'מתחילים מהצד הימני! הנר הבא הולך משמאל לנר הקודם.');
+    if(wrong>=2)slots[placed].classList.add('hint');
+    return;
+  }
+  candle(slots[k].firstChild,COLORS[i]);slots[k].classList.add('full');sparkle(slots[k]);
+  btn.style.visibility='hidden';placed++;wrong=0;slots.forEach(q=>q.classList.remove('hint'));beep(520+placed*50);
+  if(placed===day){phase='shamash';ui()}else say('יפה! עוד '+(day-placed)+(day-placed===1?' נר':' נרות')+'. כל נר הולך משמאל לקודם.');
+}
+function tapSlot(k,viaDrag){
+  if(phase==='light'){
+    if(!viaDrag){shake(slots[k]);say('גוררים את השמש אל הנר 🔥');return}
+    const target=day-1-litN;
+    if(k===target){
+      slots[k].firstChild.firstChild.classList.add('lit');sparkle(slots[k]);
+      litN++;wrong=0;slots.forEach(q=>q.classList.remove('hint'));beep(600+litN*60);glow();
+      if(litN===day)win();else say('נהדר! ממשיכים ימינה, לנר הבא.');
+    }else{
+      shake(slots[k]);wrong++;beep(180);
+      say('מדליקים משמאל לימין! מתחילים מהנר הכי שמאלי.');
+      if(wrong>=2)slots[target].classList.add('hint');
+    }
+  }else if(phase==='place'){shake(slots[k]);say('גוררים נר מהקופסה אל החנוכיה 👇')}
+  else if(phase==='shamash'){shake(slots[k]);say('קודם מדליקים את השמש, הנר שבאמצע.')}
+}
+function slotNear(x,y){
+  const m=$('menorah').getBoundingClientRect();
+  if(y<m.top-70||y>m.bottom+40)return -1;
+  let best=-1,bd=1e9;
+  slots.forEach((s,j)=>{const r=s.getBoundingClientRect();const d=Math.abs(x-(r.left+r.width/2));if(d<bd){bd=d;best=j}});
+  return bd<40?best:-1;
+}
+function startShamDrag(e){
+  if(phase!=='light')return;
+  e.preventDefault();
+  const g=document.createElement('div');g.className='ghost sg';g.style.backgroundColor='#f6efd8';
+  const f=document.createElement('div');f.className='flame';g.appendChild(f);
+  document.body.appendChild(g);sham.classList.add('dragging');beep(500);
+  let lastBad=-2;const x0=e.clientX,y0=e.clientY;
+  const mv=(x,y)=>{const px=x,py=y;y-=60;g.style.left=x+'px';g.style.top=y+'px';const k=slotNear(x,y);slots.forEach((q,j)=>q.classList.toggle('over',j===k));
+    if(phase==='light'&&k>=0&&Math.hypot(px-x0,py-y0)>25){const t=day-1-litN;
+      if(k===t){lastBad=-2;tapSlot(k,true);if(phase==='done')up({clientX:px,clientY:py})}
+      else if(k<t&&k!==lastBad){lastBad=k;tapSlot(k,true)}}
+  };
+  mv(e.clientX,e.clientY);
+  const move=ev=>mv(ev.clientX,ev.clientY);
+  const up=ev=>{
+    removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+    g.remove();sham.classList.remove('dragging');slots.forEach(q=>q.classList.remove('over'));
+    const k=slotNear(ev.clientX,ev.clientY-60);
+    if(phase==='light'&&k===day-1-litN)tapSlot(k,true);
+  };
+  addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
+function intro(d){
+  phase='intro';ui();
+  const tk=++introTk,b=$('badge'),bn=$('bn'),S=84;
+  b.textContent=d;b.style.visibility='hidden';bn.textContent=d;
+  bn.style.transition='none';bn.style.opacity=1;
+  bn.style.transform='translate('+(innerWidth/2-S/2)+'px,'+(innerHeight/2-S/2)+'px) scale(3.2)';
+  void bn.offsetWidth;beep(700);
+  setTimeout(()=>{if(tk!==introTk)return;const r=b.getBoundingClientRect();bn.style.transition='transform .9s cubic-bezier(.6,0,.3,1)';bn.style.transform='translate('+(r.left+r.width/2-S/2)+'px,'+(r.top+r.height/2-S/2)+'px) scale('+r.width/S+')'},1300);
+  setTimeout(()=>{if(tk!==introTk)return;b.style.visibility='visible';bn.style.opacity=0;phase='place';ui()},2300);
+}
+function tapSham(){
+  if(phase==='shamash'){sham.firstChild.firstChild.classList.add('lit');sparkle(sham);sham.classList.add('ready');phase='light';beep(660);ui()}
+  else if(phase==='place'){shake(sham);say('קודם שמים את כל הנרות, ואז מדליקים את השמש.')}
+}
+function win(){
+  phase='done';
+  const last=day===8;
+  const rnd=mode==='rnd';
+  $('wintext').textContent=rnd?'כל הכבוד! מוכנות ליום חדש?':last?'הדלקת את כל שמונת הנרות! עכשיו הימים יהיו בלי סדר.':'הדלקת נכון את '+day+(day===1?' הנר':' הנרות')+'!';
+  $('next').textContent=rnd?'יום חדש!':last?'בלי סדר!':'היום הבא';
+  setTimeout(()=>$('win').classList.add('show'),700);
+  for(let i=0;i<26;i++){const c=document.createElement('div');c.className='conf';c.textContent=['✨','🎉','⭐','🕎'][i%4];c.style.left=Math.random()*95+'vw';c.style.animationDelay=Math.random()*1.2+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),4200)}
+  [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f),i*140));
+}
+function randDay(){let n;do{n=1+Math.floor(Math.random()*8)}while(n===day);return n}
+$('next').onclick=()=>{if(mode==='rnd'||day===8)newRound(randDay(),true);else newRound(day+1)};
+$('restart').onclick=()=>newRound(1);
+$('shuffle').onclick=()=>newRound(randDay(),true);
+const dd=$('days');for(let i=1;i<=8;i++){const b=document.createElement('button');b.textContent=i;b.onclick=()=>newRound(i);dd.appendChild(b)}
+const sky=$('sky');for(let i=0;i<48;i++){const s=document.createElement('div');s.className='star';const z=Math.random()*2.5+1;s.style.cssText='left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;width:'+z+'px;height:'+z+'px;animation-delay:'+Math.random()*3+'s;animation-duration:'+(8+Math.random()*8)+'s';sky.appendChild(s)}
+newRound(1);
+</script>
+</body>
+</html>
